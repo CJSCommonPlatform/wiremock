@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.admin.model.*;
 import com.github.tomakehurst.wiremock.admin.tasks.*;
 import com.github.tomakehurst.wiremock.common.AdminException;
 import com.github.tomakehurst.wiremock.common.Json;
+import com.github.tomakehurst.wiremock.common.ProxySettings;
 import com.github.tomakehurst.wiremock.core.Admin;
 import com.github.tomakehurst.wiremock.global.GlobalSettings;
 import com.github.tomakehurst.wiremock.http.HttpClientFactory;
@@ -37,6 +38,7 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.common.Exceptions.throwUnchecked;
 import static com.github.tomakehurst.wiremock.common.HttpClientUtils.getEntityAsStringAndCloseStream;
+import static com.github.tomakehurst.wiremock.common.ProxySettings.NO_PROXY;
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.net.HttpURLConnection.*;
@@ -57,18 +59,18 @@ public class HttpAdminClient implements Admin {
     private final CloseableHttpClient httpClient;
 
     public HttpAdminClient(String scheme, String host, int port) {
-        this(scheme, host, port, "");
+        this(scheme, host, port, "", NO_PROXY);
     }
 
-    public HttpAdminClient(String host, int port, String urlPathPrefix) {
-        this("http", host, port, urlPathPrefix);
+    public HttpAdminClient(String host, int port, ProxySettings proxySettings) {
+        this(host, port, "", proxySettings);
     }
 
-    public HttpAdminClient(String scheme, String host, int port, String urlPathPrefix) {
-        this(scheme, host, port, urlPathPrefix, null);
+    public HttpAdminClient(String scheme, String host, int port, String urlPathPrefix, ProxySettings proxySettings) {
+        this(scheme, host, port, urlPathPrefix, null, proxySettings);
     }
 
-    public HttpAdminClient(String scheme, String host, int port, String urlPathPrefix, String hostHeader) {
+    public HttpAdminClient(String scheme, String host, int port, String urlPathPrefix, String hostHeader, ProxySettings proxySettings) {
         this.scheme = scheme;
         this.host = host;
         this.port = port;
@@ -77,11 +79,15 @@ public class HttpAdminClient implements Admin {
 
         adminRoutes = AdminRoutes.defaults();
 
-        httpClient = HttpClientFactory.createClient();
+        httpClient = HttpClientFactory.createClient(proxySettings);
     }
 
     public HttpAdminClient(String host, int port) {
-        this(host, port, "");
+        this(host, port, "", NO_PROXY);
+    }
+
+    public HttpAdminClient(String host, int port, String urlPathPrefix, ProxySettings proxySettings) {
+        this("http", host, port, urlPathPrefix, proxySettings);
     }
 
     @Override

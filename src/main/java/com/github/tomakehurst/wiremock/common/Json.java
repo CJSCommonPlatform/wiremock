@@ -35,7 +35,6 @@ public final class Json {
             objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             objectMapper.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
             objectMapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-            objectMapper.configure(JsonParser.Feature.IGNORE_UNDEFINED, true);
             return objectMapper;
         }
     };

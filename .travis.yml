@@ -1,11 +1,24 @@
 language: java
 jdk:
   - oraclejdk8
-  - oraclejdk7
-  - openjdk7
 
+cache:
+  directories:
+    - "$HOME/.m2"
+before_install:
+  - git clone https://github.com/CJSCommonPlatform/travis-settings.git target/travis-settings
 install:
+  - cp -f $JAVA_HOME/jre/lib/security/cacerts target/travis-settings/cacerts
+  - chmod u+w target/travis-settings/cacerts
+  - $JAVA_HOME/jre/bin/keytool -import -v -noprompt -storepass changeit -storetype jks -trustcacerts -alias IndigoBlueRoot -file target/travis-settings/ROOT-CA.crt -keystore target/travis-settings/cacerts
   - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 6.3.0
+  - ./gradlew jar
+  - ./gradlew generatePomFileForThinJarPublication
 
 script: ./gradlew test
-
+after_success:
+  - '[[ $TRAVIS_BRANCH == "master" && $TRAVIS_PULL_REQUEST == "false" ]] || [[ $TRAVIS_TAG == release-* ]] && mvn -Djavax.net.ssl.trustStore=$PWD/target/travis-settings/cacerts deploy:deploy-file -DpomFile=build/publications/thinJar/pom-default.xml -Dfile=build/libs/wiremock.jar -Durl=https://tools.indigoblue.co.uk/nexus/content/repositories/moj-releases/ -DrepositoryId=indigoblue-nexus-release --settings target/travis-settings/settings.xml'
+env:
+  global:
+    - secure: "KUjxeixuBwXAjcJpWFMEqwhk8KkIj9syz6lR9w1/Xk23RvqVlmxhqLGtxDcgI6/hlYX66sZR8OXBjteSdfYd35lJbuJbzPGC/9qW6PtIGJ/NltvVQiOEyUZUgneAiAR8zH95i3hCq6yvjOWNJCxbO+ahKPPs079rSmGvO/CeTKkCPIX0pgkt1wnA0eXz1gmNI/KGNWWkT+m1UeUl5ZcX8kHuxX1EaaZagHiStuavmSiwXTCCHmJsnXe/7loQbMAQvpdepEwH1zgIwA+p9lgeJmW2izbbttRiDo5ToJcJNBJ3qOSv0tz99OqTxDTg3b1d8NdKaZx0aR1NjdUbaxS7gRC0FkKcVhnJRh/FDqIzi4/enZM8kA4hAibZzluhb+YtKrRwnTy/+aMz3GPjs2eWVo3qSvHqfaZxxnytlmmrPCRk2jfO6yP6E7It6yjKJ+YNgGyZRcI2aFnmXoD5Uwn69pEw+o4UOvHl1FQjTFewYhZiVtIH6mlatttN6yRToONOd7Y+EpojgmO2fgZ0RbAUgcxrdZM1WoRC6m5s08lqQlpeRMF/ff2xTuFDmlJYH0Z4RDGAs44gSGhsOz5CTqFrVP7NyffyosVS28TyMYC5cgFgBiQxrcxuexg7FD3UlGD44O7XkI2/PZ3ROiQmNIvw2oYndMHHGKsIxF2XfPT1s6g="
+    - secure: "QqwxvRDOyHBac36g5XcgU1MjONzjsh6Ua7LpOn6dr7g69iAUTD7cwaKxiAjPydYcPWCdoAbz7XBWJ4rsW6vgcPI5leckPl6HeR06PETT4pwC2jzX2J+O946fgxZdWzJB8QYsuP1OvaMDQP8eP1gg6kZYveIXJuDQdHN6zZw0ry71liJOVbS1qdbnt7dJDBMThEq/yEOeDvGszXpvUnwE/yIoYJRdmZ2IKtOx5i/m+qAH2gUcxyDaktNjQSb1sKGLYrMdIRUyO5OUfmpZtFqnejUFUr3qcK+FBH2wZfE25ujAbPXiKVNJ1fKMEhpnEpFujxFOngEkXWI5hJ+M4C/6QPUG8PeEigaOMp0qsvrlrRbRSTwhMtd/I9vp3VulNj3kYjil/KuZ2zk7IrE3xVj1UufXTKPQQzOxyGne80h8GPpiyxnTNAmFWIl0eNydhykcTugBVVPeGD9/879VIN1pu7xs0KFZiPZX/hyiMuyu7GOpqlfP+iBCiagUNkmR5hLeT1wp72Htkodoij0s8D7zzrV+KoSJZtjv/CpOa8O5H2/pspgOoZSALn9tdfXsvY1Yd8fOvrbtM7uW8+l17bBdAQP0+nXgRskpCb2TXsAyep0nN30TSWrOUByE04R8T+B8o6iXK2cS1T3k5Jev2upVXTBmpU7oeYLR79Yh6pXW3MI="

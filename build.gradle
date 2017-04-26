@@ -1,5 +1,6 @@
 buildscript {
     repositories {
+
         maven {
             url "https://oss.sonatype.org"
         }
@@ -29,7 +30,8 @@ apply plugin: 'com.github.johnrengelman.shadow'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 group = 'com.github.tomakehurst'
-version = '2.6.0'
+version = '2.6.0.2.MoJ.Fork'
+
 
 def shouldPublishLocally = System.getProperty('LOCAL_PUBLISH')
 
@@ -40,6 +42,7 @@ def versions = [
 
 repositories {
     mavenCentral()
+
 }
 
 dependencies {
@@ -129,11 +132,12 @@ jar {
     manifest {
         attributes("Main-Class": "com.github.tomakehurst.wiremock.standalone.WireMockServerRunner")
     }
+    archiveName = "wiremock.jar"
 }
 
 shadowJar {
     baseName = 'wiremock-standalone'
-    classifier = ''
+    classifier = 'jar'
 
     relocate "org.mortbay", 'wiremock.org.mortbay'
     relocate "org.eclipse", 'wiremock.org.eclipse'
@@ -267,15 +271,6 @@ publishing {
             from components.java
             artifact sourcesJar
             artifact javadocJar
-            (signJars.signatures + signThinJar.singleSignature).each { signature ->
-                artifact(signature) {
-                    classifier = signature.classifier == '' ? null : signature.classifier
-                    extension = "jar.${signature.extension}"
-                }
-            }
-            artifact(signThinJarPom.singleSignature) {
-                extension = 'pom.asc'
-            }
 
             pom.withXml {
                 asNode().children().last() + pomInfo
@@ -319,8 +314,6 @@ task checkReleasePreconditions << {
     def REQUIRED_GIT_BRANCH = 'master'
 
     println "Using Java version: ${System.getProperty('java.runtime.version')}"
-    assert System.getProperty('java.runtime.version').startsWith('1.7'), "Must release with Java 7 to avoid collection bug"
-
     def currentGitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
     assert currentGitBranch == REQUIRED_GIT_BRANCH, "Must be on the $REQUIRED_GIT_BRANCH branch in order to release"
 }

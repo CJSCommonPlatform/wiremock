@@ -18,6 +18,7 @@ package com.github.tomakehurst.wiremock.client;
 import com.github.tomakehurst.wiremock.admin.model.ListStubMappingsResult;
 import com.github.tomakehurst.wiremock.admin.model.SingleStubMappingResult;
 import com.github.tomakehurst.wiremock.common.FileSource;
+import com.github.tomakehurst.wiremock.common.ProxySettings;
 import com.github.tomakehurst.wiremock.common.SingleRootFileSource;
 import com.github.tomakehurst.wiremock.core.Admin;
 import com.github.tomakehurst.wiremock.extension.Parameters;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.github.tomakehurst.wiremock.common.ProxySettings.NO_PROXY;
 import static com.github.tomakehurst.wiremock.matching.RequestPattern.thatMatch;
 import static com.github.tomakehurst.wiremock.matching.RequestPatternBuilder.allRequests;
 import static com.google.common.collect.FluentIterable.from;
@@ -74,8 +76,12 @@ public class WireMock {
 		admin = new HttpAdminClient(host, port);
 	}
 
+    public WireMock(String host, int port, ProxySettings proxySettings) {
+        admin = new HttpAdminClient(host, port, proxySettings);
+    }
+
 	public WireMock(String host, int port, String urlPathPrefix) {
-		admin = new HttpAdminClient(host, port, urlPathPrefix);
+		admin = new HttpAdminClient(host, port, urlPathPrefix, NO_PROXY);
 	}
 
 	public WireMock(String scheme, String host, int port) {
@@ -83,14 +89,14 @@ public class WireMock {
 	}
 
 	public WireMock(String scheme, String host, int port, String urlPathPrefix) {
-		admin = new HttpAdminClient(scheme, host, port, urlPathPrefix);
+		admin = new HttpAdminClient(scheme, host, port, urlPathPrefix, NO_PROXY);
 	}
 
 	public WireMock() {
 		admin = new HttpAdminClient(DEFAULT_HOST, DEFAULT_PORT);
 	}
 
-	public static StubMapping givenThat(MappingBuilder mappingBuilder) {
+    public static StubMapping givenThat(MappingBuilder mappingBuilder) {
 		return defaultInstance.get().register(mappingBuilder);
 	}
 
@@ -125,6 +131,10 @@ public class WireMock {
 	public static void configureFor(String host, int port) {
 		defaultInstance.set(new WireMock(host, port));
 	}
+
+    public static void configureFor(String host, int port, ProxySettings proxySettings) {
+        defaultInstance.set(new WireMock(host, port, proxySettings));
+    }
 
 	public static void configureFor(String host, int port, String urlPathPrefix) {
 		defaultInstance.set(new WireMock(host, port, urlPathPrefix));
